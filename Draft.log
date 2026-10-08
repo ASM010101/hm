@@ -1,0 +1,451 @@
+#include <stdio.h>
+#include <math.h>
+#include <time.h>
+
+long hnonly(int n){
+    long hn0=1;
+    long ln0=0;
+    long hn1,ln1;
+    int i;
+    for(i=1;i<=n;i++){
+        hn1=2*hn0+ln0;
+        ln1=hn0+ln0;
+        hn0=hn1;
+        ln0=ln1;
+    }
+    return hn0;
+}
+
+long lnonly(int n){
+    long hn0=1;
+    long ln0=0;
+    long hn1,ln1;
+    int i;
+    for(i=1;i<=n;i++){
+        hn1=2*hn0+ln0;
+        ln1=hn0+ln0;
+        hn0=hn1;
+        ln0=ln1;
+    }
+    return ln0;
+}
+
+void hnandln(int n,long *hnvalue,long *lnvalue){
+    long hn0=1;
+    long ln0=0;
+    long hn1,ln1;
+    int i;
+    for(i=1;i<=n;i++){
+        hn1=2*hn0+ln0;
+        ln1=hn0+ln0;
+        hn0=hn1;
+        ln0=ln1;
+    }
+    *hnvalue=hn0;
+    *lnvalue=ln0;
+}
+
+void hnlnclosed(int n,double *hnvalue,double *lnvalue){
+    double root5=sqrt(5.0);
+    double p1=(5+root5)/10.0;
+    double p2=pow((3-root5)/2.0,n+1);
+    double p3=(5-root5)/10.0;
+    double p4=pow((3+root5)/2.0,n+1);
+    double h=p1*p2+p3*p4;
+
+    double p5=(-5-3*root5)/10.0;
+    double p6=(3*root5-5)/10.0;
+    double l=p5*p2+p6*p4;
+
+    *hnvalue=h;
+    *lnvalue=l;
+}
+
+typedef struct{
+    long a,b,c,d;
+}Mat;
+
+Mat multiplyMat(Mat x,Mat y){
+    Mat res;
+    res.a=x.a*y.a+x.b*y.c;
+    res.b=x.a*y.b+x.b*y.d;
+    res.c=x.c*y.a+x.d*y.c;
+    res.d=x.c*y.b+x.d*y.d;
+    return res;
+}
+
+Mat powMat(Mat base,int p){
+    Mat result;
+    result.a=1;result.b=0;result.c=0;result.d=1;
+    while(p>0){
+        if(p%2==1){
+            result=multiplyMat(result,base);
+        }
+        base=multiplyMat(base,base);
+        p=p/2;
+    }
+    return result;
+}
+
+void hnlnlog(int n,long *hnvalue,long *lnvalue){
+    Mat m;
+    m.a=2;m.b=1;m.c=1;m.d=1;
+    Mat res=powMat(m,n);
+    *hnvalue=res.a;
+    *lnvalue=res.c;
+}
+
+int main(){
+    int n;
+    printf("enter value of n: ");
+    scanf("%d",&n);
+
+    struct timespec start,end;
+    double timetaken;
+
+    timespec_get(&start,TIME_UTC);
+    long hnval1=hnonly(n);
+    timespec_get(&end,TIME_UTC);
+    timetaken=(end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)/1000000000.0;
+    printf("Hn value using recurrence function hnonly = %ld\n",hnval1);
+    printf("time taken = %f seconds\n\n",timetaken);
+
+    timespec_get(&start,TIME_UTC);
+    long lnval1=lnonly(n);
+    timespec_get(&end,TIME_UTC);
+    timetaken=(end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)/1000000000.0;
+    printf("Ln value using recurrence function lnonly = %ld\n",lnval1);
+    printf("time taken = %f seconds\n\n",timetaken);
+
+    long hnval2,lnval2;
+    timespec_get(&start,TIME_UTC);
+    hnandln(n,&hnval2,&lnval2);
+    timespec_get(&end,TIME_UTC);
+    timetaken=(end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)/1000000000.0;
+    printf("Hn = %ld  Ln = %ld using function hnandln\n",hnval2,lnval2);
+    printf("time taken = %f seconds\n\n",timetaken);
+
+    double hnval3,lnval3;
+    timespec_get(&start,TIME_UTC);
+    hnlnclosed(n,&hnval3,&lnval3);
+    timespec_get(&end,TIME_UTC);
+    timetaken=(end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)/1000000000.0;
+    printf("Hn = %f  Ln = %f using closed form function hnlnclosed\n",hnval3,lnval3);
+    printf("time taken = %f seconds\n\n",timetaken);
+
+    long hnval4,lnval4;
+    timespec_get(&start,TIME_UTC);
+    hnlnlog(n,&hnval4,&lnval4);
+    timespec_get(&end,TIME_UTC);
+    timetaken=(end.tv_sec-start.tv_sec)+(end.tv_nsec-start.tv_nsec)/1000000000.0;
+    printf("Hn = %ld  Ln = %ld using log n function hnlnlog\n",hnval4,lnval4);
+    printf("time taken = %f seconds\n\n",timetaken);
+
+    return 0;
+}
+
+
+
+
+
+
+
+
+//homework2://
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <sys/time.h>
+
+#define MAX 200000
+
+int arr[MAX];        
+int original[MAX];   
+int n;               
+long long comparisons; 
+
+double getTime() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec + tv.tv_usec / 1000000.0;
+}
+
+void resetArray() {
+    for (int i = 0; i < n; i++) {
+        arr[i] = original[i];
+    }
+}
+
+void bubbleSort() {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - 1 - i; j++) {
+            comparisons++;
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+int mergeTemp[MAX];
+
+void merge(int left, int mid, int right) {
+    int i = left;
+    int j = mid + 1;
+    int k = left;
+
+    while (i <= mid && j <= right) {
+        comparisons++;
+        if (arr[i] <= arr[j]) {
+            mergeTemp[k] = arr[i];
+            i++;
+        } else {
+            mergeTemp[k] = arr[j];
+            j++;
+        }
+        k++;
+    }
+
+    while (i <= mid) {
+        mergeTemp[k] = arr[i];
+        i++;
+        k++;
+    }
+
+    while (j <= right) {
+        mergeTemp[k] = arr[j];
+        j++;
+        k++;
+    }
+
+    for (i = left; i <= right; i++) {
+        arr[i] = mergeTemp[i];
+    }
+}
+
+void mergeSort(int left, int right) {
+    if (left < right) {
+        int mid = (left + right) / 2;
+        mergeSort(left, mid);
+        mergeSort(mid + 1, right);
+        merge(left, mid, right);
+    }
+}
+
+void quickSort(int left, int right) {
+    if (left < right) {
+        int randomIndex = left + rand() % (right - left + 1);
+        int temp = arr[randomIndex];
+        arr[randomIndex] = arr[right];
+        arr[right] = temp;
+
+        int pivot = arr[right];
+        int i = left - 1;
+
+        for (int j = left; j < right; j++) {
+            comparisons++;
+            if (arr[j] < pivot) {
+                i++;
+                int temp2 = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp2;
+            }
+        }
+
+        int temp3 = arr[i + 1];
+        arr[i + 1] = arr[right];
+        arr[right] = temp3;
+
+        int pivotPosition = i + 1;
+
+        quickSort(left, pivotPosition - 1);
+        quickSort(pivotPosition + 1, right);
+    }
+}
+
+void quickSort3(int left, int right) {
+    if (left < right) {
+        if (right - left + 1 >= 3) {
+            int idx1 = left + rand() % (right - left + 1);
+            int idx2 = left + rand() % (right - left + 1);
+            int idx3 = left + rand() % (right - left + 1);
+
+            int medianIdx;
+            comparisons++;
+            if (arr[idx1] < arr[idx2]) {
+                comparisons++;
+                if (arr[idx2] < arr[idx3]) {
+                    medianIdx = idx2;
+                } else {
+                    comparisons++;
+                    if (arr[idx1] < arr[idx3]) {
+                        medianIdx = idx3;
+                    } else {
+                        medianIdx = idx1;
+                    }
+                }
+            } else {
+                comparisons++;
+                if (arr[idx1] < arr[idx3]) {
+                    medianIdx = idx1;
+                } else {
+                    comparisons++;
+                    if (arr[idx2] < arr[idx3]) {
+                        medianIdx = idx3;
+                    } else {
+                        medianIdx = idx2;
+                    }
+                }
+            }
+
+            int temp = arr[medianIdx];
+            arr[medianIdx] = arr[right];
+            arr[right] = temp;
+        } else {
+            int randomIndex = left + rand() % (right - left + 1);
+            int temp = arr[randomIndex];
+            arr[randomIndex] = arr[right];
+            arr[right] = temp;
+        }
+
+        int pivot = arr[right];
+        int i = left - 1;
+
+        for (int j = left; j < right; j++) {
+            comparisons++;
+            if (arr[j] < pivot) {
+                i++;
+                int temp2 = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp2;
+            }
+        }
+
+        int temp3 = arr[i + 1];
+        arr[i + 1] = arr[right];
+        arr[right] = temp3;
+
+        int pivotPosition = i + 1;
+
+        quickSort3(left, pivotPosition - 1);
+        quickSort3(pivotPosition + 1, right);
+    }
+}
+
+int partitionSelect(int left, int right, int pivotIndex) {
+    int pivotValue = arr[pivotIndex];
+    int temp = arr[pivotIndex];
+    arr[pivotIndex] = arr[right];
+    arr[right] = temp;
+
+    int i = left - 1;
+    for (int j = left; j < right; j++) {
+        comparisons++;
+        if (arr[j] < pivotValue) {
+            i++;
+            int temp2 = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp2;
+        }
+    }
+    int temp3 = arr[i + 1];
+    arr[i + 1] = arr[right];
+    arr[right] = temp3;
+    return i + 1;
+}
+
+int quickSelect(int left, int right, int k) {
+    if (left == right) {
+        return left;
+    }
+    int randomIndex = left + rand() % (right - left + 1);
+    int pivotPosition = partitionSelect(left, right, randomIndex);
+
+    if (k == pivotPosition) {
+        return pivotPosition;
+    } else if (k < pivotPosition) {
+        return quickSelect(left, pivotPosition - 1, k);
+    } else {
+        return quickSelect(pivotPosition + 1, right, k);
+    }
+}
+
+void quickSortM(int left, int right) {
+    if (left < right) {
+        int mid = left + (right - left) / 2;
+        quickSelect(left, right, mid);
+        quickSortM(left, mid - 1);
+        quickSortM(mid + 1, right);
+    }
+}
+
+int main(int argc, char *argv[]) {
+
+    n = atoi(argv[1]);    
+    srand(time(NULL));
+    for (int i = 0; i < n; i++) {
+        original[i] = rand();
+    }
+
+    double startTime, endTime;
+
+    resetArray();
+    comparisons = 0;
+    startTime = getTime();
+    bubbleSort();
+    endTime = getTime();
+    printf("%lld %.6f ", comparisons, endTime - startTime);
+
+    resetArray();
+    comparisons = 0;
+    startTime = getTime();
+    mergeSort(0, n - 1);
+    endTime = getTime();
+    printf("%lld %.6f ", comparisons, endTime - startTime);
+
+    resetArray();
+    comparisons = 0;
+    startTime = getTime();
+    quickSort(0, n - 1);
+    endTime = getTime();
+    printf("%lld %.6f ", comparisons, endTime - startTime);
+
+    resetArray();
+    comparisons = 0;
+    startTime = getTime();
+    quickSort3(0, n - 1);
+    endTime = getTime();
+    printf("%lld %.6f ", comparisons, endTime - startTime);
+
+    resetArray();
+    comparisons = 0;
+    startTime = getTime();
+    quickSortM(0, n - 1);
+    endTime = getTime();
+    printf("%lld %.6f ", comparisons, endTime - startTime);
+
+    printf("\n");
+    return 0;
+}
+
+//hm2 output file//
+#!/bin/bash
+gcc -o sortprog assgH02.c
+read -p "Enter number of random elements: " n
+echo "$n $(./sortprog $n)" >> output.txt
+echo 'plot "output.txt" using 1:2 w l title "bubble", "output.txt" using 1:4 w l title "merge", "output.txt" using 1:6 w l title "quick1", "output.txt" using 1:8 w l title "quick3", "output.txt" using 1:10 w l title "quickM"' > plot.gnu
+gnuplot plot.gnu
+
+
+//output.txt hm2//
+2000 1999000 0.013254 19423 0.000459 26327 0.000393 23372 0.000412 51160 0.000604 
+4000 7998000 0.036422 42808 0.000785 59538 0.000669 52942 0.000719 118797 0.001543 
+6000 17997000 0.083926 67802 0.001238 87229 0.001039 84411 0.001102 192966 0.001970 
+8000 31996000 0.164047 93634 0.001742 119601 0.001607 116630 0.001626 254568 0.002636 
+10000 49995000 0.240009 120443 0.002225 162964 0.001799 148289 0.002336 335328 0.003971 
+15000 112492500 0.669715 189292 0.003513 254104 0.002740 243529 0.002945 572772 0.005006 
+20000 199990000 0.943435 260822 0.004800 343458 0.003890 352554 0.004011 743013 0.006984 
+
+
